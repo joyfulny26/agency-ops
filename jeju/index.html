@@ -20,6 +20,10 @@
   href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
 />
 
+<!-- 지도: Leaflet (오픈소스, API 키 불필요) + CARTO 타일 -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <style>
 /* =========================================================
    0. 디자인 토큰 (CSS Variables) — Light / Dark 테마
@@ -503,6 +507,62 @@ footer { padding: 60px 0 120px; text-align: center; color: var(--text-mute); fon
 footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
 
 /* =========================================================
+   12-b. Overview Map (Leaflet)
+   ========================================================= */
+.map-shell {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--r-xl);
+  padding: 18px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.map-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.mchip {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 0.84rem; font-weight: 700;
+  padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface);
+  color: var(--text-soft); cursor: pointer; opacity: 0.45;
+  transition: opacity 0.2s var(--ease), color 0.2s, box-shadow 0.2s, transform 0.2s var(--ease);
+}
+.mchip:hover { transform: translateY(-2px); }
+.mchip.active { opacity: 1; color: var(--text); box-shadow: var(--shadow-sm); }
+.mchip i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+
+#mapCanvas { width: 100%; height: 470px; border-radius: var(--r-lg); z-index: 0; }
+@media (max-width: 640px) { #mapCanvas { height: 380px; } }
+
+/* 커스텀 핀 마커 */
+.leaflet-div-icon { background: transparent; border: none; }
+.mpin {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--surface); border: 3px solid var(--c);
+  display: grid; place-items: center; font-size: 1rem;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.35); cursor: pointer;
+  transition: transform 0.18s var(--ease);
+}
+.mpin:hover { transform: scale(1.22); z-index: 500; }
+
+/* 팝업 */
+.mpop { display: flex; flex-direction: column; gap: 6px; min-width: 148px; text-align: center; }
+.mpop b { font-size: 1.05rem; }
+.mpop .mpop-r { font-size: 0.8rem; font-weight: 700; }
+.mpop a { background: var(--naver); color: #fff; font-weight: 700; font-size: 0.85rem; padding: 8px 10px; border-radius: 10px; margin-top: 2px; }
+.map-hint { font-size: 0.78rem; color: var(--text-mute); margin-top: 12px; text-align: center; }
+
+/* Leaflet 컴포넌트 테마 연동 */
+.leaflet-container { font-family: inherit; background: var(--surface-2); }
+.leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--surface); color: var(--text); box-shadow: var(--shadow-md); }
+.leaflet-popup-content { margin: 14px 16px; font-family: inherit; }
+.leaflet-popup-close-button { color: var(--text-mute) !important; }
+.leaflet-bar a { background: var(--surface); color: var(--text); border-color: var(--line); }
+.leaflet-bar a:hover { background: var(--surface-2); }
+.leaflet-control-attribution { background: var(--glass-bg) !important; color: var(--text-mute); }
+.leaflet-control-attribution a { color: var(--text-soft); }
+
+/* =========================================================
    13. Scroll Reveal Animation
    ========================================================= */
 .reveal { opacity: 0; transform: translateY(34px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
@@ -546,6 +606,7 @@ footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin
   <div class="wrap">
     <a href="#top" class="brand">🌴 나영's <span>제주</span></a>
     <div class="nav-links" id="navLinks">
+      <a href="#map">지도</a>
       <a href="#arrival">도착</a>
       <a href="#gujwa">구좌</a>
       <a href="#hyeopjae">협재·판포</a>
@@ -570,6 +631,7 @@ footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin
 
     <p class="quick-title reveal d3">지역별 바로가기</p>
     <div class="quick-links reveal d3">
+      <a href="#map">🗺️ 전체지도</a>
       <a href="#arrival">✈️ 공항</a>
       <a href="#gujwa">🏊 구좌</a>
       <a href="#hyeopjae">🌊 협재·판포</a>
@@ -583,6 +645,24 @@ footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin
 </header>
 
 <main>
+
+<!-- ============================= OVERVIEW MAP ============================= -->
+<section id="map">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Overview Map</span>
+      <h2>🗺️ 한눈에 보는 제주 지도</h2>
+      <p>추천 장소 25곳을 지역별 색으로 표시했어요. 핀을 누르면 네이버 지도로 바로 이동합니다.</p>
+    </div>
+    <div class="map-shell reveal">
+      <!-- 지역 필터 칩 (JS로 자동 생성) -->
+      <div class="map-filters" id="mapFilters" role="group" aria-label="지역 필터"></div>
+      <!-- 지도 캔버스 -->
+      <div id="mapCanvas"></div>
+      <p class="map-hint">💡 핀 클릭 → 장소 정보 · 지역 버튼으로 켜고 끄기 · 확대/축소는 지도의 +/− 버튼</p>
+    </div>
+  </div>
+</section>
 
 <!-- ============================= TIP ============================= -->
 <section id="tip">
@@ -1194,6 +1274,7 @@ footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin
 <nav id="bottomNav" aria-label="모바일 네비게이션">
   <div class="bn-track">
     <a href="#top"><span class="bi">🏠</span>홈</a>
+    <a href="#map"><span class="bi">🗺️</span>지도</a>
     <a href="#gujwa"><span class="bi">🏊</span>구좌</a>
     <a href="#pyoseon"><span class="bi">👨‍👩‍👧</span>표선</a>
     <a href="#dinner"><span class="bi">🍽️</span>다이닝</a>
@@ -1222,6 +1303,8 @@ footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin
   function applyTheme(t) {
     docEl.setAttribute("data-theme", t);
     themeBtn.textContent = t === "dark" ? "☀️" : "🌙";
+    // 지도 타일도 테마에 맞춰 교체 (지도 준비된 경우)
+    if (window.__updateMapTiles) window.__updateMapTiles(t);
   }
   applyTheme(theme);
 
@@ -1290,6 +1373,145 @@ footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin
     reveals.forEach(function (el) { revObserver.observe(el); });
   } else {
     reveals.forEach(function (el) { el.classList.add("in"); });
+  }
+})();
+</script>
+
+<script>
+/* =========================================================
+   Overview Map — Leaflet
+   지역별 색상 핀 · 필터 칩 · 다크모드 타일 연동 · 팝업(네이버 지도)
+   좌표는 네이버 place API로 사전 추출한 값 (정적 내장)
+   ========================================================= */
+(function () {
+  "use strict";
+  if (typeof L === "undefined") return; // Leaflet 로드 실패 시 안전 종료
+
+  /* 지역 메타: 라벨 · 이모지 · 색상 */
+  var REGIONS = {
+    arrival:  { label: "도착",       emoji: "✈️",     color: "#ff8fab" },
+    gujwa:    { label: "구좌",       emoji: "🏊",     color: "#4ea8de" },
+    hyeopjae: { label: "협재·판포",  emoji: "🌊",     color: "#2bb7a8" },
+    pyoseon:  { label: "표선",       emoji: "👨‍👩‍👧", color: "#f4a261" },
+    sanbang:  { label: "산방산",     emoji: "⛰️",     color: "#9b8cff" },
+    cafe:     { label: "카페",       emoji: "☕",     color: "#b5835a" },
+    cool:     { label: "더울 때",    emoji: "❄️",     color: "#56ccf2" },
+    dinner:   { label: "파인다이닝", emoji: "🍽️",     color: "#e07a5f" },
+    extra:    { label: "시간 남으면", emoji: "🐬",     color: "#2a9d8f" }
+  };
+
+  /* 장소 좌표 데이터 (naver.me 단축코드 = 지도 링크) */
+  var PLACES = [
+    { n: "도두해녀의집",        lat: 33.506204,  lng: 126.466628,  r: "arrival",  c: "x8ipe0Yv" },
+    { n: "세기알해변",          lat: 33.5579426, lng: 126.7555313, r: "gujwa",    c: "xw9hR5Kp" },
+    { n: "코난해변",            lat: 33.5575731, lng: 126.8111927, r: "gujwa",    c: "GFetgp0C" },
+    { n: "토끼섬",              lat: 33.5239512, lng: 126.9028626, r: "gujwa",    c: "xM8Di4kK" },
+    { n: "김녕용암해수사우나",  lat: 33.5566969, lng: 126.7559858, r: "gujwa",    c: "xhn3EFJN" },
+    { n: "인카페온더비치",      lat: 33.5452303, lng: 126.8279993, r: "gujwa",    c: "ID1UiUq1" },
+    { n: "월령포구",            lat: 33.3789281, lng: 126.2162607, r: "hyeopjae", c: "GkJCbPI1" },
+    { n: "판포포구",            lat: 33.3654409, lng: 126.1995916, r: "hyeopjae", c: "GmVMsGGD" },
+    { n: "제주빡빡이 스쿠버",   lat: 33.3786254, lng: 126.2165555, r: "hyeopjae", c: "Fbi0QPzm" },
+    { n: "페쪼",                lat: 33.362504,  lng: 126.1930996, r: "hyeopjae", c: "xcnxP2gL" },
+    { n: "우피후피",            lat: 33.3888218, lng: 126.2329578, r: "hyeopjae", c: "GbDhK7IW" },
+    { n: "표선해수욕장",        lat: 33.326027,  lng: 126.8403326, r: "pyoseon",  c: "FqHtWrN9" },
+    { n: "당케올레국수",        lat: 33.3252726, lng: 126.84333,   r: "pyoseon",  c: "5OGyQJne" },
+    { n: "제주할망밥상",        lat: 33.3203441, lng: 126.8292487, r: "pyoseon",  c: "FXropfnw" },
+    { n: "광어다",              lat: 33.3038884, lng: 126.8091895, r: "pyoseon",  c: "xzLmPym3" },
+    { n: "표선하다",            lat: 33.326464,  lng: 126.8446303, r: "pyoseon",  c: "5Ps8aku0" },
+    { n: "오늘은녹차한잔",      lat: 33.3818449, lng: 126.791065,  r: "pyoseon",  c: "GisBvykn" },
+    { n: "더웨이팅",            lat: 33.3176323, lng: 126.8288424, r: "pyoseon",  c: "Ix7qBmgF" },
+    { n: "산방소찬",            lat: 33.236539,  lng: 126.3106276, r: "sanbang",  c: "FQIGpA8v" },
+    { n: "오설록",              lat: 33.3060843, lng: 126.2893925, r: "sanbang",  c: "5s3XQIzR" },
+    { n: "동화마을 (파리바게뜨 제주점)", lat: 33.4353537, lng: 126.7325016, r: "cafe", c: "5R8Ddxj7" },
+    { n: "블루보틀 제주",       lat: 33.4332363, lng: 126.7507897, r: "cafe",    c: "FXrGXAub" },
+    { n: "만장굴",              lat: 33.5282731, lng: 126.7699229, r: "cool",    c: "GOQKZvuz" },
+    { n: "피아티니",            lat: 33.5164464, lng: 126.5157813, r: "dinner",  c: "GQSfPPdp" },
+    { n: "오롯이온당",          lat: 33.2569697, lng: 126.1887489, r: "extra",   c: "5noQRVIr" }
+  ];
+
+  /* 지도 생성 (스크롤 확대 비활성화 → 페이지 스크롤 방해 없음) */
+  var map = L.map("mapCanvas", {
+    scrollWheelZoom: false,
+    zoomControl: true,
+    attributionControl: true
+  });
+
+  /* 테마별 타일 (CARTO, 키 불필요) */
+  var TILE = {
+    light: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    dark:  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+  };
+  var ATTR = '&copy; <a href="https://openstreetmap.org">OSM</a> · &copy; <a href="https://carto.com">CARTO</a>';
+  var tileLayer = null;
+  function setTiles(theme) {
+    var url = theme === "dark" ? TILE.dark : TILE.light;
+    if (tileLayer) map.removeLayer(tileLayer);
+    tileLayer = L.tileLayer(url, { maxZoom: 19, subdomains: "abcd", attribution: ATTR });
+    tileLayer.addTo(map);
+  }
+  // 테마 토글에서 호출할 수 있도록 전역 노출
+  window.__updateMapTiles = setTiles;
+  setTiles(document.documentElement.getAttribute("data-theme") || "light");
+
+  /* 지역별 레이어 그룹 + 마커 */
+  var groups = {};
+  Object.keys(REGIONS).forEach(function (k) { groups[k] = L.layerGroup(); });
+
+  var bounds = [];
+  PLACES.forEach(function (p) {
+    var reg = REGIONS[p.r];
+    var icon = L.divIcon({
+      html: '<div class="mpin" style="--c:' + reg.color + '"><span>' + reg.emoji + "</span></div>",
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -16]
+    });
+    var marker = L.marker([p.lat, p.lng], { icon: icon, title: p.n });
+    var link = "https://naver.me/" + p.c;
+    marker.bindPopup(
+      '<div class="mpop"><b>' + p.n + "</b>" +
+      '<span class="mpop-r" style="color:' + reg.color + '">' + reg.emoji + " " + reg.label + "</span>" +
+      '<a href="' + link + '" target="_blank" rel="noopener">📍 네이버 지도 보기</a></div>'
+    );
+    marker.addTo(groups[p.r]);
+    bounds.push([p.lat, p.lng]);
+  });
+  Object.keys(groups).forEach(function (k) { groups[k].addTo(map); });
+  map.fitBounds(bounds, { padding: [42, 42] });
+
+  /* 지역 필터 칩 생성 (개수 표시 + 켜고 끄기) */
+  var counts = {};
+  PLACES.forEach(function (p) { counts[p.r] = (counts[p.r] || 0) + 1; });
+
+  var filters = document.getElementById("mapFilters");
+  var active = {};
+  Object.keys(REGIONS).forEach(function (k) {
+    if (!counts[k]) return; // 해당 지역 장소 없으면 스킵
+    active[k] = true;
+    var reg = REGIONS[k];
+    var btn = document.createElement("button");
+    btn.className = "mchip active";
+    btn.type = "button";
+    btn.setAttribute("aria-pressed", "true");
+    btn.innerHTML = '<i style="background:' + reg.color + '"></i>' + reg.emoji + " " + reg.label + " " + counts[k];
+    btn.addEventListener("click", function () {
+      active[k] = !active[k];
+      btn.classList.toggle("active", active[k]);
+      btn.setAttribute("aria-pressed", active[k] ? "true" : "false");
+      if (active[k]) groups[k].addTo(map);
+      else map.removeLayer(groups[k]);
+    });
+    filters.appendChild(btn);
+  });
+
+  /* 컨테이너가 fade-in / 리사이즈될 때 지도 크기 재계산 */
+  function refresh() { map.invalidateSize(); }
+  window.addEventListener("load", refresh);
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) refresh(); });
+    }, { threshold: 0.05 });
+    io.observe(document.getElementById("map"));
   }
 })();
 </script>
