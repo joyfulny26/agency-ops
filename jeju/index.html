@@ -1,0 +1,1297 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🌴 나영's 제주 추천 코스</title>
+<meta name="description" content="직접 다녀보고 다시 가고 싶은 제주 여행 코스 — 지역별 스노클링, 맛집, 카페, 파인다이닝 큐레이션" />
+
+<!-- ============================================================
+     나영's 제주 추천 코스 — Single File Travel Website
+     Apple 제품 소개 페이지 + 여행 매거진 + Airbnb 가이드 감성
+     구조: <head> 스타일 → <body> 마크업 → <script> 인터랙션
+     이미지: .ph(placeholder) 영역에 나중에 background-image만 교체
+     ============================================================ -->
+
+<!-- 폰트: Pretendard(본문) + 이모지 폴백 -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
+/>
+
+<style>
+/* =========================================================
+   0. 디자인 토큰 (CSS Variables) — Light / Dark 테마
+   ========================================================= */
+:root {
+  /* Palette — White + Sky Blue + Mint + Sand */
+  --sky: #4ea8de;
+  --sky-soft: #a9d6f0;
+  --mint: #5fd0c5;
+  --mint-soft: #b6ece6;
+  --sand: #f0e2c8;
+  --sand-deep: #e6d3ad;
+  --naver: #03c75a;
+
+  /* Surface & Text (Light) */
+  --bg: #f7fbff;
+  --bg-grad-1: #eaf6ff;
+  --bg-grad-2: #eafcf7;
+  --bg-grad-3: #fdf6e8;
+  --surface: #ffffff;
+  --surface-2: #f2f7fb;
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-brd: rgba(255, 255, 255, 0.7);
+  --text: #14202b;
+  --text-soft: #4a5a68;
+  --text-mute: #8496a4;
+  --line: rgba(20, 40, 60, 0.08);
+
+  /* Shadow */
+  --shadow-sm: 0 2px 10px rgba(30, 70, 110, 0.06);
+  --shadow-md: 0 10px 30px rgba(30, 70, 110, 0.10);
+  --shadow-lg: 0 24px 60px rgba(30, 70, 110, 0.16);
+
+  /* Radius */
+  --r-sm: 12px;
+  --r-md: 20px;
+  --r-lg: 28px;
+  --r-xl: 40px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur: 0.6s;
+
+  /* Layout */
+  --nav-h: 66px;
+  --max: 1160px;
+}
+
+/* Dark Mode */
+html[data-theme="dark"] {
+  --bg: #0b1016;
+  --bg-grad-1: #0e1a24;
+  --bg-grad-2: #0d1a1c;
+  --bg-grad-3: #171410;
+  --surface: #151d26;
+  --surface-2: #1b2530;
+  --glass-bg: rgba(22, 32, 43, 0.55);
+  --glass-brd: rgba(255, 255, 255, 0.08);
+  --text: #eaf2f8;
+  --text-soft: #b3c2ce;
+  --text-mute: #7d8d9a;
+  --line: rgba(255, 255, 255, 0.09);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 12px 34px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 26px 64px rgba(0, 0, 0, 0.62);
+}
+
+/* =========================================================
+   1. Reset & Base
+   ========================================================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 14px); }
+body {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: background 0.5s var(--ease), color 0.5s var(--ease);
+}
+/* 은은하게 흐르는 배경 그라디언트 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(60vw 60vw at 12% -8%, var(--bg-grad-1), transparent 60%),
+    radial-gradient(55vw 55vw at 100% 8%, var(--bg-grad-2), transparent 55%),
+    radial-gradient(70vw 60vw at 50% 110%, var(--bg-grad-3), transparent 60%);
+  transition: opacity 0.5s var(--ease);
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+ul { list-style: none; }
+:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; border-radius: 6px; }
+
+.wrap { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 22px; }
+
+/* =========================================================
+   2. Progress Bar (스크롤 진행률)
+   ========================================================= */
+#progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px; width: 0%;
+  background: linear-gradient(90deg, var(--sky), var(--mint));
+  z-index: 1200;
+  transition: width 0.1s linear;
+}
+
+/* =========================================================
+   3. Sticky Navigation
+   ========================================================= */
+#nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--nav-h);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  background: var(--glass-bg);
+  backdrop-filter: saturate(180%) blur(18px);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid var(--line);
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+#nav.scrolled { box-shadow: var(--shadow-sm); }
+#nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.brand { font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; white-space: nowrap; }
+.brand span { color: var(--sky); }
+
+.nav-links { display: flex; gap: 4px; align-items: center; }
+.nav-links a {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  padding: 8px 12px;
+  border-radius: 999px;
+  transition: color 0.25s, background 0.25s;
+  white-space: nowrap;
+}
+.nav-links a:hover { color: var(--text); background: var(--surface-2); }
+.nav-links a.active { color: #fff; background: linear-gradient(120deg, var(--sky), var(--mint)); }
+
+/* Dark Mode Toggle */
+.theme-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: grid; place-items: center;
+  transition: transform 0.3s var(--ease), background 0.3s;
+  flex-shrink: 0;
+}
+.theme-btn:hover { transform: rotate(-15deg) scale(1.08); }
+
+/* =========================================================
+   4. Hero
+   ========================================================= */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: calc(var(--nav-h) + 40px) 22px 80px;
+  overflow: hidden;
+}
+/* Hero gradient orbs */
+.hero .orb { position: absolute; border-radius: 50%; filter: blur(50px); opacity: 0.55; z-index: 0; }
+.hero .orb.a { width: 380px; height: 380px; background: var(--sky-soft); top: 6%; left: -8%; animation: float1 14s ease-in-out infinite; }
+.hero .orb.b { width: 320px; height: 320px; background: var(--mint-soft); bottom: 4%; right: -6%; animation: float2 16s ease-in-out infinite; }
+.hero .orb.c { width: 260px; height: 260px; background: var(--sand-deep); top: 40%; right: 22%; opacity: 0.4; animation: float1 20s ease-in-out infinite; }
+@keyframes float1 { 0%,100% { transform: translateY(0) } 50% { transform: translateY(30px) } }
+@keyframes float2 { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-34px) } }
+
+.hero-inner { position: relative; z-index: 1; max-width: 820px; }
+.hero .eyebrow {
+  display: inline-block;
+  font-size: 0.85rem; font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sky);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  padding: 8px 16px; border-radius: 999px;
+  margin-bottom: 26px;
+  backdrop-filter: blur(10px);
+}
+.hero h1 {
+  font-size: clamp(2.4rem, 7vw, 4.6rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  background: linear-gradient(120deg, var(--text) 30%, var(--sky) 75%, var(--mint));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero .sub {
+  margin-top: 22px;
+  font-size: clamp(1.05rem, 2.4vw, 1.35rem);
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+/* 지역별 바로가기 */
+.quick-title { margin-top: 52px; font-size: 0.9rem; font-weight: 700; color: var(--text-mute); letter-spacing: 0.05em; }
+.quick-links {
+  margin-top: 18px;
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+}
+.quick-links a {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.95rem; font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), background 0.3s;
+}
+.quick-links a:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); background: var(--surface); }
+
+.scroll-cue {
+  position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+  z-index: 1; color: var(--text-mute); font-size: 0.78rem; font-weight: 600;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  animation: bob 2s ease-in-out infinite;
+}
+@keyframes bob { 0%,100% { transform: translate(-50%,0) } 50% { transform: translate(-50%,8px) } }
+
+/* =========================================================
+   5. Section 공통
+   ========================================================= */
+section { padding: 88px 0; position: relative; }
+.section-head { max-width: 760px; margin-bottom: 44px; }
+.section-tag {
+  display: inline-block;
+  font-size: 0.8rem; font-weight: 800; letter-spacing: 0.12em;
+  color: var(--mint);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.section-head h2 {
+  font-size: clamp(1.8rem, 4.4vw, 2.9rem);
+  font-weight: 800; letter-spacing: -0.025em; line-height: 1.15;
+}
+.section-head p { margin-top: 14px; font-size: 1.05rem; color: var(--text-soft); }
+
+/* =========================================================
+   6. Glass Card / Place Card
+   ========================================================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 26px;
+}
+.card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex; flex-direction: column;
+  transition: transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
+}
+.card:hover { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
+
+/* 이미지 placeholder — 나중에 background-image URL만 교체 */
+.ph {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background:
+    linear-gradient(135deg, var(--sky-soft), var(--mint-soft) 55%, var(--sand));
+  background-size: cover; background-position: center;
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+html[data-theme="dark"] .ph { filter: saturate(0.9) brightness(0.85); }
+.ph .ph-emoji { font-size: 3rem; opacity: 0.55; transition: transform 0.6s var(--ease); }
+.card:hover .ph .ph-emoji { transform: scale(1.12) rotate(-4deg); }
+.ph .ph-note {
+  position: absolute; bottom: 10px; right: 12px;
+  font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.85);
+  background: rgba(0,0,0,0.28);
+  padding: 4px 9px; border-radius: 999px;
+  backdrop-filter: blur(4px);
+}
+
+.card-body { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+.card h3 { font-size: 1.28rem; font-weight: 800; letter-spacing: -0.02em; }
+.card .summary { font-size: 0.98rem; color: var(--text-soft); font-weight: 500; }
+.stars { font-size: 0.95rem; letter-spacing: 2px; }
+
+.meta { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; }
+.meta .row { font-size: 0.9rem; color: var(--text-soft); }
+.meta .row b { color: var(--text); font-weight: 700; }
+.tags { display: flex; flex-wrap: wrap; gap: 7px; }
+.tag {
+  font-size: 0.78rem; font-weight: 600;
+  padding: 5px 11px; border-radius: 999px;
+  background: var(--surface-2); color: var(--text-soft);
+  border: 1px solid var(--line);
+}
+
+/* 네이버 지도 버튼 (초록 #03C75A) */
+.btn-map {
+  margin-top: auto;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--naver); color: #fff;
+  font-weight: 700; font-size: 0.94rem;
+  padding: 13px 18px; border-radius: 14px;
+  transition: transform 0.25s var(--ease), filter 0.25s, box-shadow 0.25s;
+  box-shadow: 0 6px 18px rgba(3, 199, 90, 0.28);
+}
+.btn-map:hover { transform: translateY(-2px); filter: brightness(1.05); box-shadow: 0 10px 24px rgba(3, 199, 90, 0.38); }
+.btn-map.soon { background: var(--surface-2); color: var(--text-mute); box-shadow: none; cursor: default; border: 1px dashed var(--line); }
+.btn-map.soon:hover { transform: none; filter: none; }
+
+/* =========================================================
+   7. TIP 섹션 (강조 카드)
+   ========================================================= */
+.tip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.tip {
+  border-radius: var(--r-lg);
+  padding: 34px 32px;
+  border: 1px solid var(--glass-brd);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+  position: relative; overflow: hidden;
+}
+.tip.a { background: linear-gradient(150deg, rgba(78,168,222,0.16), rgba(95,208,197,0.12)); }
+.tip.b { background: linear-gradient(150deg, rgba(240,226,200,0.30), rgba(230,211,173,0.18)); }
+.tip .badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.82rem; font-weight: 800; letter-spacing: 0.03em;
+  color: var(--sky); margin-bottom: 14px;
+}
+.tip.b .badge { color: #c39b3e; }
+.tip h3 { font-size: 1.4rem; font-weight: 800; margin-bottom: 12px; letter-spacing: -0.02em; }
+.tip p { color: var(--text-soft); font-size: 1rem; }
+.flow-inline {
+  display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin: 14px 0 4px; font-weight: 800; font-size: 1.15rem;
+}
+.flow-inline .step {
+  padding: 8px 16px; border-radius: 999px;
+  background: var(--surface); border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+.flow-inline .arrow { color: var(--sky); font-size: 1.2rem; }
+.perk-list { margin-top: 14px; display: flex; flex-direction: column; gap: 9px; }
+.perk-list li { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; color: var(--text); }
+.perk-list li::before { content: "🎁"; }
+.note-warn {
+  margin-top: 16px; font-size: 0.88rem; font-weight: 700; color: #c0392b;
+  background: rgba(192,57,43,0.08); border: 1px solid rgba(192,57,43,0.2);
+  padding: 10px 14px; border-radius: 12px;
+}
+html[data-theme="dark"] .note-warn { color: #ff8f7a; }
+
+/* =========================================================
+   8. 동선(Flow) — 바다 → 샤워 → 식사
+   ========================================================= */
+.flow {
+  margin-top: 40px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--r-lg);
+  padding: 26px 24px;
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(12px);
+}
+.flow .flow-label { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.1em; color: var(--text-mute); text-transform: uppercase; margin-bottom: 16px; }
+.flow-track {
+  display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px;
+}
+.flow-node {
+  flex: 1; min-width: 120px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  text-align: center;
+  padding: 16px 12px;
+  border-radius: var(--r-md);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s;
+}
+.flow-node:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.flow-node .ic { font-size: 1.7rem; }
+.flow-node .nm { font-size: 0.9rem; font-weight: 700; }
+.flow-node .role { font-size: 0.75rem; color: var(--text-mute); font-weight: 600; }
+.flow-arrow { display: grid; place-items: center; color: var(--sky); font-size: 1.5rem; font-weight: 800; }
+@media (max-width: 640px) {
+  .flow-track { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+}
+
+/* subsection 제목 (섹션 내 그룹) */
+.sub-h { margin: 46px 0 22px; display: flex; align-items: center; gap: 12px; }
+.sub-h .num { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; color: #fff; background: linear-gradient(130deg, var(--sky), var(--mint)); flex-shrink: 0; }
+.sub-h h3 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+
+/* =========================================================
+   9. BEST COURSE — Timeline
+   ========================================================= */
+.best { background: linear-gradient(180deg, transparent, rgba(95,208,197,0.06)); }
+.course-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 26px; }
+.course {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  border-radius: var(--r-lg);
+  padding: 30px 26px;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(14px);
+}
+.course .c-head { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.course .c-badge { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 1.1rem; color: #fff; background: linear-gradient(130deg, var(--sky), var(--mint)); }
+.course .c-head h3 { font-size: 1.35rem; font-weight: 800; }
+.timeline { position: relative; padding-left: 30px; }
+.timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--sky), var(--mint)); border-radius: 2px; }
+.tl-item { position: relative; padding: 8px 0; }
+.tl-item::before {
+  content: ""; position: absolute; left: -26px; top: 14px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--surface); border: 3px solid var(--sky);
+  box-shadow: 0 0 0 4px rgba(78,168,222,0.14);
+}
+.tl-item .tl-name { font-weight: 700; font-size: 1.02rem; }
+.tl-item .tl-desc { font-size: 0.85rem; color: var(--text-mute); }
+
+/* =========================================================
+   10. 맨 위로 버튼
+   ========================================================= */
+#toTop {
+  position: fixed; right: 22px; bottom: 22px; z-index: 900;
+  width: 50px; height: 50px; border-radius: 50%;
+  border: 1px solid var(--glass-brd);
+  background: var(--glass-bg); backdrop-filter: blur(14px);
+  color: var(--text); font-size: 1.2rem; cursor: pointer;
+  box-shadow: var(--shadow-md);
+  display: grid; place-items: center;
+  opacity: 0; pointer-events: none; transform: translateY(16px);
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease), background 0.3s;
+}
+#toTop.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+#toTop:hover { background: var(--surface); transform: translateY(-3px); }
+@media (max-width: 820px) { #toTop { bottom: calc(72px + 16px); } }
+
+/* =========================================================
+   11. 모바일 Bottom Navigation
+   ========================================================= */
+#bottomNav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000;
+  display: none;
+  background: var(--glass-bg); backdrop-filter: saturate(180%) blur(18px);
+  border-top: 1px solid var(--line);
+  padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+}
+#bottomNav .bn-track { display: flex; justify-content: space-around; align-items: center; }
+#bottomNav a {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 0.66rem; font-weight: 700; color: var(--text-mute);
+  padding: 6px 2px; border-radius: 12px; transition: color 0.25s, background 0.25s;
+}
+#bottomNav a .bi { font-size: 1.25rem; }
+#bottomNav a.active { color: var(--sky); }
+
+/* =========================================================
+   12. Footer
+   ========================================================= */
+footer { padding: 60px 0 120px; text-align: center; color: var(--text-mute); font-size: 0.9rem; }
+footer .fbrand { font-weight: 800; font-size: 1.2rem; color: var(--text); margin-bottom: 8px; }
+
+/* =========================================================
+   13. Scroll Reveal Animation
+   ========================================================= */
+.reveal { opacity: 0; transform: translateY(34px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+.reveal.in { opacity: 1; transform: none; }
+/* 카드 순차 등장 delay */
+.reveal.d1 { transition-delay: 0.06s; }
+.reveal.d2 { transition-delay: 0.12s; }
+.reveal.d3 { transition-delay: 0.18s; }
+.reveal.d4 { transition-delay: 0.24s; }
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
+  html { scroll-behavior: auto; }
+}
+
+/* =========================================================
+   14. Responsive
+   ========================================================= */
+@media (max-width: 980px) {
+  .nav-links { display: none; }   /* 태블릿 이하: 상단 링크 숨김 → 하단/퀵링크 사용 */
+}
+@media (max-width: 820px) {
+  #bottomNav { display: block; }
+  body { padding-bottom: 40px; }
+  .tip-grid { grid-template-columns: 1fr; }
+  section { padding: 64px 0; }
+}
+@media (max-width: 520px) {
+  .grid { grid-template-columns: 1fr; }
+  .quick-links a { font-size: 0.88rem; padding: 10px 16px; }
+}
+</style>
+</head>
+
+<body>
+<!-- Progress Bar -->
+<div id="progress" aria-hidden="true"></div>
+
+<!-- ============================= NAV ============================= -->
+<nav id="nav">
+  <div class="wrap">
+    <a href="#top" class="brand">🌴 나영's <span>제주</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="#arrival">도착</a>
+      <a href="#gujwa">구좌</a>
+      <a href="#hyeopjae">협재·판포</a>
+      <a href="#pyoseon">표선</a>
+      <a href="#sanbang">산방산</a>
+      <a href="#cafe">카페</a>
+      <a href="#cool">더울 때</a>
+      <a href="#dinner">파인다이닝</a>
+      <a href="#best">BEST</a>
+    </div>
+    <button class="theme-btn" id="themeBtn" aria-label="다크모드 전환" title="다크모드 전환">🌙</button>
+  </div>
+</nav>
+
+<!-- ============================= HERO ============================= -->
+<header class="hero" id="top">
+  <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+  <div class="hero-inner">
+    <span class="eyebrow reveal">Jeju Travel Guide</span>
+    <h1 class="reveal d1">🌴 나영's<br />제주 추천 코스</h1>
+    <p class="sub reveal d2">"직접 다녀보고 다시 가고 싶은 제주 여행 코스"</p>
+
+    <p class="quick-title reveal d3">지역별 바로가기</p>
+    <div class="quick-links reveal d3">
+      <a href="#arrival">✈️ 공항</a>
+      <a href="#gujwa">🏊 구좌</a>
+      <a href="#hyeopjae">🌊 협재·판포</a>
+      <a href="#pyoseon">👨‍👩‍👧 표선</a>
+      <a href="#sanbang">⛰️ 산방산</a>
+      <a href="#cafe">☕ 카페</a>
+      <a href="#dinner">🍽️ 파인다이닝</a>
+    </div>
+  </div>
+  <div class="scroll-cue" aria-hidden="true"><span>SCROLL</span><span>↓</span></div>
+</header>
+
+<main>
+
+<!-- ============================= TIP ============================= -->
+<section id="tip">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Travel Tip</span>
+      <h2>제주 여행 꿀팁</h2>
+      <p>알고 가면 만족도가 달라지는 두 가지. 동선과 혜택을 꼭 챙기세요.</p>
+    </div>
+
+    <div class="tip-grid">
+      <!-- Tip 1: 동선 -->
+      <div class="tip a reveal">
+        <div class="badge">🐳 스노클링 동선의 정석</div>
+        <h3>바다 → 샤워 → 맛집</h3>
+        <div class="flow-inline">
+          <span class="step">🌊 바다</span><span class="arrow">→</span>
+          <span class="step">🚿 샤워</span><span class="arrow">→</span>
+          <span class="step">🍽️ 맛집</span>
+        </div>
+        <p>
+          제주에서 스노클링 갈 때는 이 동선으로 움직이는 것이 가장 중요합니다.
+          바다에서 실컷 놀고, 바로 샤워하고, 맛있는 식사를 하면 만족도가 훨씬 높아져요.
+        </p>
+      </div>
+
+      <!-- Tip 2: 지역사랑기부 제주패스 -->
+      <div class="tip b reveal d1">
+        <div class="badge">🎫 지역사랑기부 제주패스</div>
+        <h3>혜택을 꼭 확인하세요</h3>
+        <p>혹시 <b>지역사랑기부 제주패스</b>가 있는 분이라면 대표 혜택을 놓치지 마세요.</p>
+        <ul class="perk-list">
+          <li>만장굴 무료입장</li>
+          <li>오설록 아이스크림 1+1</li>
+          <li>기타 다양한 할인 혜택</li>
+        </ul>
+        <div class="note-warn">※ 만장굴 무료입장은 신분증 필수</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 1 : 도착 ============================= -->
+<section id="arrival">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 01 · Arrival</span>
+      <h2>✈️ 제주 도착하자마자</h2>
+      <p>공항과 가까워 첫 끼로 최고. 오전 10시 오픈런을 추천합니다.</p>
+    </div>
+
+    <div class="grid">
+      <!-- 도두해녀의집 -->
+      <article class="card reveal">
+        <div class="ph"><!-- 이미지 교체: style="background-image:url('사진.jpg')" -->
+          <span class="ph-emoji">🍲</span><span class="ph-note">PHOTO</span>
+        </div>
+        <div class="card-body">
+          <h3>도두해녀의집</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">제주 도착 첫 코스로 가장 추천하는 해녀 밥집.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 공항과 가까워 첫 끼로 최고. 오전 10시 오픈런 추천.</div>
+            <div class="tags">
+              <span class="tag">전복죽</span><span class="tag">한치물회</span><span class="tag">성게미역국</span>
+            </div>
+          </div>
+          <a class="btn-map" href="https://naver.me/x8ipe0Yv" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 2 : 구좌 ============================= -->
+<section id="gujwa">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 02 · Gujwa</span>
+      <h2>🏊 구좌 스노클링 코스</h2>
+      <p>물이 정말 맑은 제주 최애 스노클링 장소. 바다 → 샤워 → 브런치까지 완벽한 하루.</p>
+    </div>
+
+    <!-- 스노클링 스팟 -->
+    <div class="sub-h reveal"><span class="num">1</span><h3>🌊 스노클링 스팟</h3></div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🐠</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>세기알해변</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">물이 맑아 제주 최애로 꼽는 스노클링 포인트.</p>
+          <div class="meta"><div class="row"><b>추천 이유</b> · 투명한 물속에서 즐기는 스노클링.</div></div>
+          <a class="btn-map" href="https://naver.me/xw9hR5Kp" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🐟</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>코난해변</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">숨은 명소 감성의 맑은 스노클링 해변.</p>
+          <div class="meta"><div class="row"><b>추천 이유</b> · 한적하게 즐기기 좋은 물빛.</div></div>
+          <a class="btn-map" href="https://naver.me/GFetgp0C" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d2">
+        <div class="ph"><span class="ph-emoji">🏝️</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>토끼섬</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">물이 정말 맑은 제주 최애 스노클링 장소.</p>
+          <div class="meta"><div class="row"><b>추천 이유</b> · 맑은 물빛과 이국적인 풍경.</div></div>
+          <a class="btn-map" href="https://naver.me/xM8Di4kK" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+
+    <!-- 동선 -->
+    <div class="flow reveal">
+      <div class="flow-label">추천 동선</div>
+      <div class="flow-track">
+        <div class="flow-node"><span class="ic">🌊</span><span class="nm">세기알·코난·토끼섬</span><span class="role">바다</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span class="ic">🚿</span><span class="nm">김녕용암해수사우나</span><span class="role">샤워·온천</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span class="ic">🍽️</span><span class="nm">인카페온더비치</span><span class="role">브런치·피자</span></div>
+      </div>
+    </div>
+
+    <!-- 샤워 & 맛집 -->
+    <div class="sub-h reveal"><span class="num">2</span><h3>🚿 샤워 & ☕ 브런치</h3></div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">♨️</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>김녕용암해수사우나</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">바다에서 놀고 바로 씻기 좋은 샤워 + 온천.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 스노클링 후 소금기를 씻어내기 완벽.</div>
+            <div class="tags"><span class="tag">샤워</span><span class="tag">온천</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/xhn3EFJN" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🍕</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>인카페온더비치</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">바다 뷰와 함께 즐기는 브런치 & 피자.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 물놀이 마무리로 여유로운 식사.</div>
+            <div class="tags"><span class="tag">브런치</span><span class="tag">피자</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/ID1UiUq1" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 3 : 협재·판포 ============================= -->
+<section id="hyeopjae">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 03 · Hyeopjae · Panpo</span>
+      <h2>🌊 협재·판포 스노클링 코스</h2>
+      <p>포구에서 시작해 장비 대여, 샤워, 피자, 카페까지 이어지는 서쪽 물놀이 코스.</p>
+    </div>
+
+    <div class="sub-h reveal"><span class="num">1</span><h3>🌊 스노클링 포인트</h3></div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🌊</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>월령포구</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">협재·판포 라인의 맑은 스노클링 포구.</p>
+          <div class="meta"><div class="row"><b>추천 이유</b> · 서쪽 물빛을 즐기기 좋은 포인트.</div></div>
+          <a class="btn-map" href="https://naver.me/GkJCbPI1" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🐡</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>판포포구</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">스노클링 명소로 유명한 판포포구.</p>
+          <div class="meta"><div class="row"><b>추천 이유</b> · 맑은 물과 다양한 물고기.</div></div>
+          <a class="btn-map" href="https://naver.me/GmVMsGGD" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+
+    <div class="flow reveal">
+      <div class="flow-label">추천 동선</div>
+      <div class="flow-track">
+        <div class="flow-node"><span class="ic">🌊</span><span class="nm">판포·월령포구</span><span class="role">바다</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span class="ic">🤿</span><span class="nm">제주빡빡이 스쿠버</span><span class="role">장비·온수샤워</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span class="ic">🍕</span><span class="nm">페쪼</span><span class="role">피자</span></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node"><span class="ic">☕</span><span class="nm">우피후피</span><span class="role">카페</span></div>
+      </div>
+    </div>
+
+    <div class="sub-h reveal"><span class="num">2</span><h3>🤿 장비·샤워 / 🍽️ 맛집·카페</h3></div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🤿</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>제주빡빡이 스쿠버</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">장비 대여 + 온수 샤워가 가능한 스쿠버 샵.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 물놀이 준비와 마무리를 한 번에.</div>
+            <div class="tags"><span class="tag">장비 대여</span><span class="tag">온수 샤워</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/Fbi0QPzm" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🍕</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>페쪼</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">협재·판포 물놀이 후 들르기 좋은 피자 맛집.</p>
+          <div class="meta">
+            <div class="row"><b>추천 메뉴</b> · 피자 추천.</div>
+            <div class="tags"><span class="tag">피자</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/xcnxP2gL" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d2">
+        <div class="ph"><span class="ph-emoji">☕</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>우피후피</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">코스 마무리로 여유롭게 쉬기 좋은 카페.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 물놀이 후 커피 한잔의 여유.</div>
+            <div class="tags"><span class="tag">카페</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/GbDhK7IW" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 4 : 표선 가족여행 ============================= -->
+<section id="pyoseon">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 04 · Pyoseon Family</span>
+      <h2>👨‍👩‍👧 표선 가족여행</h2>
+      <p>해수욕장에서 국수·한상·초밥·카페·녹차밭까지, 온 가족이 즐기기 좋은 표선 코스.</p>
+    </div>
+
+    <!-- 해변 -->
+    <div class="sub-h reveal"><span class="num">1</span><h3>🏖️ 바다</h3></div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🏖️</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>표선해수욕장</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">얕고 넓은 백사장으로 가족 물놀이에 딱.</p>
+          <div class="meta"><div class="row"><b>추천 이유</b> · 아이와 함께 안심하고 놀기 좋은 해변.</div></div>
+          <a class="btn-map" href="https://naver.me/FqHtWrN9" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+
+    <!-- 맛집 -->
+    <div class="sub-h reveal"><span class="num">2</span><h3>🍽️ 맛집</h3></div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🍜</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>당케올레국수</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">진하고 깊은 국물의 보말칼국수 맛집.</p>
+          <div class="meta">
+            <div class="row"><b>추천 메뉴</b> · 보말칼국수.</div>
+            <div class="tags"><span class="tag">보말칼국수</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/5OGyQJne" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🐟</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>제주할망밥상</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">그날 잡은 신선한 생선구이 한상.</p>
+          <div class="meta">
+            <div class="row"><b>추천 메뉴</b> · 그날 잡은 생선구이, 제육볶음 한상.</div>
+            <div class="tags"><span class="tag">생선구이</span><span class="tag">제육볶음</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/FXropfnw" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d2">
+        <div class="ph"><span class="ph-emoji">🍣</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>광어다</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">양식장에서 바로 잡은 싱싱한 광어 요리.</p>
+          <div class="meta">
+            <div class="row"><b>추천 메뉴</b> · 광어초밥, 광어덮밥.</div>
+            <div class="tags"><span class="tag">광어초밥</span><span class="tag">광어덮밥</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/xzLmPym3" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d3">
+        <div class="ph"><span class="ph-emoji">🍱</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>더웨이팅</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">줄 서서 먹는 흑돼지 돈가스 맛집.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 줄 설 만한 가치가 있는 돈가스.</div>
+            <div class="tags"><span class="tag">흑돼지 돈가스</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/Ix7qBmgF" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+
+    <!-- 카페 & 산책 -->
+    <div class="sub-h reveal"><span class="num">3</span><h3>☕ 카페 & 산책</h3></div>
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🌅</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>표선하다</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">표선 바다를 보며 여유롭게 쉬기 좋은 카페.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 오션뷰와 함께하는 휴식.</div>
+            <div class="tags"><span class="tag">오션뷰</span><span class="tag">카페</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/5Ps8aku0" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🍵</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>오늘은녹차한잔</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">녹차밭 산책과 동굴 포토스팟이 있는 카페.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 녹차밭 산책 + 동굴 포토스팟.</div>
+            <div class="tags"><span class="tag">녹차밭</span><span class="tag">포토스팟</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/GisBvykn" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 5 : 산방산 ============================= -->
+<section id="sanbang">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 05 · Sanbangsan</span>
+      <h2>⛰️ 산방산</h2>
+      <p>드라이브와 함께 즐기는 산방산 코스. 작은 밥집과 오설록 티하우스.</p>
+    </div>
+
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🍲</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>산방소찬</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">작은 1인 식당 느낌의 정갈한 밥집.</p>
+          <div class="meta">
+            <div class="row"><b>추천 메뉴</b> · 보말칼국수, 제철 메뉴.</div>
+            <div class="tags"><span class="tag">보말칼국수</span><span class="tag">제철 메뉴</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/FQIGpA8v" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🍦</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>오설록</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">산방산 드라이브와 함께 추천하는 티 뮤지엄.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 제주패스 있으면 아이스크림 1+1 혜택.</div>
+            <div class="tags"><span class="tag">녹차 아이스크림</span><span class="tag">제주패스 혜택</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/5s3XQIzR" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 6 : 카페 & 기념품 ============================= -->
+<section id="cafe">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 06 · Cafe & Souvenir</span>
+      <h2>☕ 카페 & 기념품</h2>
+      <p>제주 한정 상품과 뷰 맛집. 관광과 쇼핑, 커피를 한 번에.</p>
+    </div>
+
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🥐</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>동화마을</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">관광하기 좋은 곳. 파리바게뜨 제주점은 꼭 추천.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 제주 한정 상품이 정말 많고 일반 매장과 퀄리티 차이가 큼. 빵을 사서 바다에서 먹고 수영하기도 좋아요.</div>
+            <div class="tags"><span class="tag">블랙피그 고구마 핫도그</span><span class="tag">제주 한정 상품</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/5R8Ddxj7" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">💙</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>블루보틀 제주</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">웨딩사진 촬영지로 유명할 만큼 아름다운 뷰.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 커피 마시고 바로 옆 러쉬 제주까지 둘러보는 코스 추천.</div>
+            <div class="tags"><span class="tag">뷰 맛집</span><span class="tag">러쉬 제주 인접</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/FXrGXAub" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 7 : 더울 때 ============================= -->
+<section id="cool">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 07 · Beat the Heat</span>
+      <h2>❄️ 더울 때 추천</h2>
+      <p>동굴 속 시원함으로 한여름 더위를 식히기 최고.</p>
+    </div>
+
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🕳️</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>만장굴</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">최근 재오픈. 동굴 내부가 매우 시원해요.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 걸으면서 구경하기 좋고 더위 식히기 최고. 제주패스 있으면 무료입장(신분증 필수).</div>
+            <div class="tags"><span class="tag">시원함</span><span class="tag">재오픈</span><span class="tag">제주패스 무료</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/GOQKZvuz" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 8 : 파인다이닝 ============================= -->
+<section id="dinner">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 08 · Fine Dining & Night</span>
+      <h2>🍽️ 분위기 좋은 저녁</h2>
+      <p>흑돼지와 회가 질릴 때. 가성비 파인다이닝과 노을 지는 LP바.</p>
+    </div>
+
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🍝</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>피아티니</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">이탈리아 가정집에 초대받은 느낌의 가성비 파인다이닝.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 가족끼리 분위기 있게 먹기 좋음. 제주 제철 식재료 사용, 눈앞에서 직접 면도 만들어줌.</div>
+            <div class="row"><b>가격</b> · 1인 약 5만원 · <b>예약</b> 캐치테이블 필수</div>
+            <div class="tags"><span class="tag">파인다이닝</span><span class="tag">수제 파스타</span><span class="tag">캐치테이블 예약</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/GQSfPPdp" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+      <article class="card reveal d1">
+        <div class="ph"><span class="ph-emoji">🎵</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>리버브 제주</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">노을 지는 바다를 보며 LP를 듣는 감성 LP바.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 노을과 음악이 어우러지는 공간. 캐치테이블 예약 또는 웨이팅 추천.</div>
+            <div class="tags"><span class="tag">LP바</span><span class="tag">노을 뷰</span><span class="tag">웨이팅</span></div>
+          </div>
+          <!-- 지도 버튼: 추후 추가 예정 -->
+          <span class="btn-map soon">📍 지도 추후 추가 예정</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= SECTION 9 : 시간 남으면 ============================= -->
+<section id="extra">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Section 09 · If Time Allows</span>
+      <h2>🐬 시간 남으면</h2>
+      <p>운이 좋으면 진짜 돌고래를 만날 수 있는 노을 카페.</p>
+    </div>
+
+    <div class="grid">
+      <article class="card reveal">
+        <div class="ph"><span class="ph-emoji">🐬</span><span class="ph-note">PHOTO</span></div>
+        <div class="card-body">
+          <h3>오롯이온당</h3>
+          <div class="stars">⭐⭐⭐⭐⭐</div>
+          <p class="summary">돌고래뷰 카페. 노을 시간에 특히 추천.</p>
+          <div class="meta">
+            <div class="row"><b>추천 이유</b> · 운 좋으면 실제 돌고래도 볼 수 있어요.</div>
+            <div class="tags"><span class="tag">돌고래뷰</span><span class="tag">노을</span></div>
+          </div>
+          <a class="btn-map" href="https://naver.me/5noQRVIr" target="_blank" rel="noopener">📍 네이버 지도 보기</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= BEST COURSE ============================= -->
+<section id="best" class="best">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="section-tag">Best Course</span>
+      <h2>⭐ 나영's BEST COURSE</h2>
+      <p>직접 다녀보고 다시 가고 싶은, 실패 없는 추천 동선 3가지.</p>
+    </div>
+
+    <div class="course-grid">
+      <!-- ① 구좌 -->
+      <div class="course reveal">
+        <div class="c-head"><span class="c-badge">①</span><h3>구좌 코스</h3></div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-name">세기알</div><div class="tl-desc">🌊 스노클링</div></div>
+          <div class="tl-item"><div class="tl-name">코난</div><div class="tl-desc">🐠 맑은 물빛</div></div>
+          <div class="tl-item"><div class="tl-name">김녕용암해수사우나</div><div class="tl-desc">🚿 샤워·온천</div></div>
+          <div class="tl-item"><div class="tl-name">인카페온더비치</div><div class="tl-desc">🍽️ 브런치·피자</div></div>
+        </div>
+      </div>
+
+      <!-- ② 협재 -->
+      <div class="course reveal d1">
+        <div class="c-head"><span class="c-badge">②</span><h3>협재 코스</h3></div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-name">판포포구</div><div class="tl-desc">🌊 스노클링</div></div>
+          <div class="tl-item"><div class="tl-name">월령포구</div><div class="tl-desc">🐡 물놀이</div></div>
+          <div class="tl-item"><div class="tl-name">제주빡빡이</div><div class="tl-desc">🤿 장비·샤워</div></div>
+          <div class="tl-item"><div class="tl-name">페쪼</div><div class="tl-desc">🍕 피자</div></div>
+          <div class="tl-item"><div class="tl-name">우피후피</div><div class="tl-desc">☕ 카페</div></div>
+        </div>
+      </div>
+
+      <!-- ③ 가족 -->
+      <div class="course reveal d2">
+        <div class="c-head"><span class="c-badge">③</span><h3>가족 코스</h3></div>
+        <div class="timeline">
+          <div class="tl-item"><div class="tl-name">표선해수욕장</div><div class="tl-desc">🏖️ 물놀이</div></div>
+          <div class="tl-item"><div class="tl-name">당케올레국수 · 제주할망밥상</div><div class="tl-desc">🍜 점심</div></div>
+          <div class="tl-item"><div class="tl-name">표선하다</div><div class="tl-desc">🌅 오션뷰 카페</div></div>
+          <div class="tl-item"><div class="tl-name">오늘은녹차한잔</div><div class="tl-desc">🍵 녹차밭 산책</div></div>
+          <div class="tl-item"><div class="tl-name">산방산</div><div class="tl-desc">⛰️ 드라이브</div></div>
+          <div class="tl-item"><div class="tl-name">오설록</div><div class="tl-desc">🍦 티하우스</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================= FOOTER ============================= -->
+<footer>
+  <div class="wrap">
+    <div class="fbrand">🌴 나영's 제주 추천 코스</div>
+    <p>직접 다녀보고 다시 가고 싶은 제주 여행 코스</p>
+    <p style="margin-top:10px;font-size:0.8rem;">📍 네이버 지도 버튼은 새 탭으로 열립니다 · 이미지는 placeholder로 추후 교체 가능</p>
+  </div>
+</footer>
+
+<!-- 맨 위로 버튼 -->
+<button id="toTop" aria-label="맨 위로" title="맨 위로">↑</button>
+
+<!-- 모바일 Bottom Navigation -->
+<nav id="bottomNav" aria-label="모바일 네비게이션">
+  <div class="bn-track">
+    <a href="#top"><span class="bi">🏠</span>홈</a>
+    <a href="#gujwa"><span class="bi">🏊</span>구좌</a>
+    <a href="#pyoseon"><span class="bi">👨‍👩‍👧</span>표선</a>
+    <a href="#dinner"><span class="bi">🍽️</span>다이닝</a>
+    <a href="#best"><span class="bi">⭐</span>BEST</a>
+  </div>
+</nav>
+
+<script>
+/* =========================================================
+   인터랙션 스크립트
+   1) 다크모드  2) Progress Bar  3) Nav scrolled
+   4) Scroll Spy  5) Scroll Reveal  6) 맨 위로
+   ========================================================= */
+(function () {
+  "use strict";
+
+  var docEl = document.documentElement;
+
+  /* ---------- 1) Dark Mode (초기값: 저장값 → OS 설정) ---------- */
+  var themeBtn = document.getElementById("themeBtn");
+  var saved = null;
+  try { saved = localStorage.getItem("jeju-theme"); } catch (e) {}
+  var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  var theme = saved || (prefersDark ? "dark" : "light");
+
+  function applyTheme(t) {
+    docEl.setAttribute("data-theme", t);
+    themeBtn.textContent = t === "dark" ? "☀️" : "🌙";
+  }
+  applyTheme(theme);
+
+  themeBtn.addEventListener("click", function () {
+    theme = docEl.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    applyTheme(theme);
+    try { localStorage.setItem("jeju-theme", theme); } catch (e) {}
+  });
+
+  /* ---------- 2) Progress Bar + 3) Nav scrolled + 6) 맨 위로 표시 ---------- */
+  var progress = document.getElementById("progress");
+  var nav = document.getElementById("nav");
+  var toTop = document.getElementById("toTop");
+
+  function onScroll() {
+    var st = window.pageYOffset || docEl.scrollTop;
+    var h = docEl.scrollHeight - docEl.clientHeight;
+    var pct = h > 0 ? (st / h) * 100 : 0;
+    progress.style.width = pct + "%";
+
+    nav.classList.toggle("scrolled", st > 10);
+    toTop.classList.toggle("show", st > 500);
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  /* 맨 위로 클릭 */
+  toTop.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  /* ---------- 4) Scroll Spy (상단 nav + 하단 nav 동시 하이라이트) ---------- */
+  var sections = Array.prototype.slice.call(document.querySelectorAll("section[id], header[id]"));
+  var topLinks = Array.prototype.slice.call(document.querySelectorAll("#navLinks a"));
+  var bottomLinks = Array.prototype.slice.call(document.querySelectorAll("#bottomNav a"));
+
+  function hrefId(a) { return (a.getAttribute("href") || "").replace("#", ""); }
+
+  function setActive(id) {
+    topLinks.forEach(function (a) { a.classList.toggle("active", hrefId(a) === id); });
+    bottomLinks.forEach(function (a) { a.classList.toggle("active", hrefId(a) === id); });
+  }
+
+  if ("IntersectionObserver" in window) {
+    var spy = new IntersectionObserver(function (entries) {
+      // 화면 상단에 가장 가까운, 교차 중인 섹션을 활성화
+      var visible = entries
+        .filter(function (e) { return e.isIntersecting; })
+        .sort(function (a, b) { return a.boundingClientRect.top - b.boundingClientRect.top; });
+      if (visible.length) setActive(visible[0].target.id);
+    }, { rootMargin: "-45% 0px -50% 0px", threshold: 0 });
+    sections.forEach(function (s) { spy.observe(s); });
+  }
+
+  /* ---------- 5) Scroll Reveal (Fade Up) ---------- */
+  var reveals = Array.prototype.slice.call(document.querySelectorAll(".reveal"));
+  if ("IntersectionObserver" in window) {
+    var revObserver = new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          e.target.classList.add("in");
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    reveals.forEach(function (el) { revObserver.observe(el); });
+  } else {
+    reveals.forEach(function (el) { el.classList.add("in"); });
+  }
+})();
+</script>
+</body>
+</html>
